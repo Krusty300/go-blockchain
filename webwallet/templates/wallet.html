@@ -5,44 +5,504 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wallet - Blockchain Web Wallet</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Auto-refresh indicator */
-        .refresh-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(108, 92, 231, 0.9);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 999;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        /* ========================================
+           PAGE CONTAINER
+        ======================================== */
+        .wallet-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* ========================================
+           WALLET HEADER
+        ======================================== */
+        .wallet-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .wallet-address h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #2d3436;
+        }
+
+        .address-box {
+            background: #f8f9fa;
+            padding: 0.9rem 1.25rem;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.75rem;
+            word-break: break-all;
+            border: 1px solid #f1f2f6;
         }
+
+        .address-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #636e72;
+            white-space: nowrap;
+        }
+
+        .address-value {
+            font-family: 'Inter', monospace;
+            flex: 1;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #2d3436;
+            letter-spacing: 0.01em;
+        }
+
+        .btn-copy {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+            color: #636e72;
+        }
+
+        .btn-copy:hover {
+            background: #e9ecef;
+        }
+
+        /* ========================================
+           BALANCE CARD
+        ======================================== */
+        .balance-card {
+            background: linear-gradient(135deg, #ffffff 0%, #bdb9ff 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 0px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            min-height: 100px;
+        }
+
+        .balance-label {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .balance-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        /* ========================================
+           WALLET ACTIONS
+        ======================================== */
+        .wallet-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .wallet-actions .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+
+        .wallet-actions .btn-primary {
+            background: linear-gradient(135deg, #ffffff 0%, #bdb9ff 100%);
+            color: white;
+        }
+
+        .wallet-actions .btn-primary:hover {
+            background: linear-gradient(135deg, #ffffff 0%, #bdb9ff 100%);
+        }
+
+        .wallet-actions .btn-secondary {
+            background: #f1f2f6;
+            color: #2d3436;
+        }
+
+        .wallet-actions .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .wallet-actions .btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ========================================
+           TRANSACTION SECTION
+        ======================================== */
+        .transaction-section {
+            background: linear-gradient(135deg, #ffffff 0%, #e9e8ff 100%);
+            border-radius: 16px;
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .transaction-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: #2d3436;
+        }
+
+        /* ========================================
+           TRANSACTION LIST
+        ======================================== */
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .transaction-item {
+            border: 1px solid #f1f2f6;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .transaction-item:hover {
+            border-color: #e9ecef;
+        }
+
+        /* ========================================
+           TRANSACTION TYPE BADGE
+        ======================================== */
+        .tx-type {
+            display: inline-block;
+            padding: 0.2rem 0.75rem;
+            border-radius: 0px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.5rem;
+        }
+
+        .tx-type.Sent {
+            background: #fff3e0;
+            color: #e17055;
+        }
+
+        .tx-type.Received {
+            background: #e8f8f5;
+            color: #00b894;
+        }
+
+        .tx-type.Mining {
+            background: #f0edff;
+            color: #6c5ce7;
+        }
+
+        /* ========================================
+           TRANSACTION DETAILS
+        ======================================== */
+        .tx-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .tx-amount {
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .tx-from,
+        .tx-to {
+            color: #636e72;
+        }
+
+        .tx-from .address-short,
+        .tx-to .address-short {
+            font-family: 'Inter', monospace;
+            font-size: 0.8rem;
+            color: #2d3436;
+            background: #f1f2f6;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* ========================================
+           TRANSACTION TIME
+        ======================================== */
+        .tx-time {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #b2bec3;
+            flex-wrap: wrap;
+            margin-top: 0.2rem;
+        }
+
+        .tx-time .timestamp-full {
+            font-family: 'Inter', monospace;
+            font-size: 0.75rem;
+            color: #636e72;
+        }
+
+        .tx-time .time-detail {
+            font-size: 0.7rem;
+            color: #b2bec3;
+        }
+
+        .tx-time .time-ago {
+            font-size: 0.7rem;
+            color: #b2bec3;
+            background: #f1f2f6;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .tx-time .genesis-badge {
+            font-size: 0.7rem;
+            color: #fdcb6e;
+            background: #fff3cd;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* ========================================
+           TRANSACTION ID
+        ======================================== */
+        .tx-id {
+            font-family: 'Inter', monospace;
+            font-size: 0.7rem;
+            color: #b2bec3;
+            margin-top: 0.3rem;
+            word-break: break-all;
+            border-top: 1px solid #f5f6fa;
+            padding-top: 0.5rem;
+        }
+
+        .tx-id-label {
+            color: #b2bec3;
+            font-weight: 500;
+        }
+
+        .tx-id-value {
+            color: #636e72;
+        }
+
+        /* ========================================
+           NO TRANSACTIONS
+        ======================================== */
+        .no-transactions {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: #b2bec3;
+        }
+
+        .no-transactions p {
+            margin: 0;
+        }
+
+        .no-transactions .hint {
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+            color: #b2bec3;
+        }
+
+        /* ========================================
+           REFRESH INDICATOR
+        ======================================== */
+        .refresh-indicator {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: rgba(108, 92, 231, 0.92);
+            color: white;
+            padding: 0.6rem 1.25rem;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            z-index: 999;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+
         .refresh-indicator .spinner {
             width: 14px;
             height: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.25);
             border-top-color: white;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.9s linear infinite;
+            flex-shrink: 0;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
         .refresh-indicator .countdown {
             font-weight: 600;
+            min-width: 1.5rem;
+            display: inline-block;
+            text-align: center;
         }
+
+        /* ========================================
+           BALANCE UPDATE ANIMATION
+        ======================================== */
         .balance-updated {
-            animation: flashGreen 0.5s ease;
+            animation: flashGreen 0.6s ease;
         }
+
         @keyframes flashGreen {
-            0% { background: rgba(0, 184, 148, 0.3); }
+            0% { background: rgba(0, 184, 148, 0.35); }
             100% { background: transparent; }
+        }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+        @media (max-width: 768px) {
+            .wallet-container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+
+            .wallet-header {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .balance-card {
+                min-height: 80px;
+                padding: 1.25rem 1.5rem;
+            }
+
+            .balance-value {
+                font-size: 1.5rem;
+            }
+
+            .wallet-actions {
+                gap: 0.5rem;
+            }
+
+            .wallet-actions .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                flex: 1;
+                text-align: center;
+                min-width: 80px;
+            }
+
+            .transaction-section {
+                padding: 1.25rem 1rem;
+            }
+
+            .transaction-item {
+                padding: 0.8rem 1rem;
+            }
+
+            .tx-details {
+                gap: 0.3rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .address-box {
+                padding: 0.7rem 1rem;
+                flex-wrap: wrap;
+            }
+
+            .address-value {
+                font-size: 0.7rem;
+                width: 100%;
+                order: 2;
+            }
+
+            .address-label {
+                font-size: 0.8rem;
+            }
+
+            .btn-copy {
+                order: 3;
+            }
+
+            .refresh-indicator {
+                bottom: 1rem;
+                right: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.7rem;
+            }
+
+            .refresh-indicator .spinner {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wallet-actions .btn {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+                min-width: 60px;
+            }
+
+            .transaction-section h3 {
+                font-size: 1rem;
+            }
+
+            .tx-type {
+                font-size: 0.6rem;
+                padding: 0.1rem 0.6rem;
+            }
+
+            .tx-time {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* ========================================
+           TOAST CONTAINER (dynamically created)
+        ======================================== */
+        #toastContainer {
+            position: fixed;
+            top: 5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 380px;
+            pointer-events: none;
+        }
+
+        #toastContainer > div {
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -50,6 +510,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
+                <span class="brand-icon">⛓️</span>
                 <span class="brand-text">Blockchain Wallet</span>
             </div>
             <div class="nav-links">
@@ -66,15 +527,15 @@
             <div class="wallet-address">
                 <h2>Wallet Overview</h2>
                 <div class="address-box">
-                    <span class="address-label">Address:</span>
+                    <span class="address-label">Address</span>
                     <span class="address-value" id="walletAddress">{{.Address}}</span>
-                    <button onclick="copyAddress()" class="btn-copy">📋</button>
+                    <button onclick="copyAddress()" class="btn-copy" aria-label="Copy address">📋</button>
                 </div>
             </div>
             <div class="wallet-balance">
                 <div class="balance-card" id="balanceCard">
-                    <div class="balance-label">Total Balance</div>
-                    <div class="balance-value" id="balanceValue">{{.Balance}} coins</div>
+                    <span class="balance-label">Total Balance</span>
+                    <span class="balance-value" id="balanceValue">{{.Balance}} coins</span>
                 </div>
             </div>
         </div>
@@ -83,26 +544,35 @@
             <a href="/send?from={{.Address}}" class="btn btn-primary">Send Coins</a>
             <a href="#" onclick="mineCoins(event)" class="btn btn-secondary">Mine Block</a>
             <a href="/explorer" class="btn btn-secondary">View Blockchain</a>
+            <a href="#" onclick="refreshWallet(event)" class="btn btn-secondary">Refresh</a>
         </div>
 
         <div class="transaction-section">
-            <h3>📜 Transaction History</h3>
+            <h3>Transaction History</h3>
             {{if .Transactions}}
                 <div class="transaction-list">
                     {{range .Transactions}}
                         <div class="transaction-item">
-                            <div class="tx-type {{.Type}}">
-                                {{.Type}}
-                            </div>
+                            <span class="tx-type {{.Type}}">{{.Type}}</span>
                             <div class="tx-details">
-                                <div class="tx-amount">{{.Amount}} coins</div>
+                                <span class="tx-amount">{{.Amount}} coins</span>
                                 {{if .From}}
-                                    <div class="tx-from">From: {{.From}}</div>
+                                    <span class="tx-from">From: <span class="address-short">{{.From}}</span></span>
                                 {{end}}
                                 {{if .To}}
-                                    <div class="tx-to">To: {{.To}}</div>
+                                    <span class="tx-to">To: <span class="address-short">{{.To}}</span></span>
                                 {{end}}
-                                <div class="tx-time">{{.Time}}</div>
+                                <div class="tx-time">
+                                    {{if .Timestamp}}
+                                        <span class="timestamp-full">{{.Time}}</span>
+                                        <span class="time-detail">(Block #{{.Block}})</span>
+                                        {{if gt .Timestamp 0}}
+                                            <span class="time-ago" id="timeAgo-{{.TxID}}">Just now</span>
+                                        {{end}}
+                                    {{else}}
+                                        <span class="genesis-badge">Genesis Block</span>
+                                    {{end}}
+                                </div>
                             </div>
                             <div class="tx-id">
                                 <span class="tx-id-label">TxID:</span>
@@ -114,7 +584,7 @@
             {{else}}
                 <div class="no-transactions">
                     <p>No transactions found for this address.</p>
-                    <p class="hint">Start by mining or receiving coins!</p>
+                    <p class="hint">Start by mining or receiving coins</p>
                 </div>
             {{end}}
         </div>
@@ -127,138 +597,148 @@
     </div>
 
     <script>
-        // Auto-refresh settings
-        let refreshInterval = 30000; // 30 seconds
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const REFRESH_INTERVAL = 30000; // 30 seconds
         let countdown = 30;
         let countdownInterval;
         let refreshTimer;
 
+        // ============================================
+        // COPY ADDRESS
+        // ============================================
         function copyAddress() {
             const address = '{{.Address}}';
-            navigator.clipboard.writeText(address).then(() => {
-                showToast(' Address copied to clipboard!', 'success');
-            }).catch(() => {
-                // Fallback
-                const input = document.createElement('input');
-                input.value = address;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand('copy');
-                document.body.removeChild(input);
-                showToast(' Address copied to clipboard!', 'success');
-            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(address)
+                    .then(() => showToast('Address copied to clipboard', 'success'))
+                    .catch(() => fallbackCopy(address));
+            } else {
+                fallbackCopy(address);
+            }
         }
 
+        function fallbackCopy(text) {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            try {
+                document.execCommand('copy');
+                showToast('Address copied to clipboard', 'success');
+            } catch (err) {
+                showToast('Failed to copy address', 'error');
+            }
+            document.body.removeChild(input);
+        }
+
+        // ============================================
+        // MINE COINS
+        // ============================================
         async function mineCoins(event) {
             if (event) event.preventDefault();
             const address = '{{.Address}}';
             if (!address) {
-                showToast(' No wallet address found', 'error');
+                showToast('No wallet address found', 'error');
                 return;
             }
-            
+
             try {
-                showToast('⛏️ Mining started... This may take a few seconds', 'info');
+                showToast('Mining started... This may take a few seconds', 'info');
                 const response = await fetch(`/api/mine?address=${address}`);
                 const data = await response.json();
                 if (data.success) {
-                    showToast(` Block mined! Received ${data.data.reward} coins!`, 'success');
-                    // Refresh after a delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+                    showToast(`Block mined! Received ${data.data.reward} coins`, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    showToast(' Mining failed: ' + data.message, 'error');
+                    showToast('Mining failed: ' + data.message, 'error');
                 }
             } catch (error) {
-                showToast(' Error mining: ' + error.message, 'error');
+                showToast('Error mining: ' + error.message, 'error');
             }
         }
 
+        // ============================================
+        // REFRESH WALLET
+        // ============================================
         async function refreshWallet(event) {
             if (event) event.preventDefault();
-            showToast(' Refreshing wallet...', 'info');
+            showToast('Refreshing wallet...', 'info');
             window.location.reload();
         }
 
-        // Toast notification system
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer') || createToastContainer();
-            const toast = document.createElement('div');
             const colors = {
                 success: '#00b894',
                 error: '#e74c3c',
                 info: '#6c5ce7',
                 warning: '#fdcb6e'
             };
+            const toast = document.createElement('div');
             toast.style.cssText = `
                 background: ${colors[type] || colors.info};
                 color: white;
-                padding: 12px 20px;
-                margin-bottom: 10px;
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                padding: 0.75rem 1.25rem;
+                border-radius: 10px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
                 animation: slideUp 0.3s ease;
-                font-family: 'Mona Sans', sans-serif;
-                font-size: 14px;
-                max-width: 400px;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                max-width: 380px;
+                pointer-events: auto;
             `;
             toast.textContent = message;
             container.appendChild(toast);
-            
+
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-20px)';
+                toast.style.transform = 'translateY(-12px)';
                 toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(() => toast.remove(), 350);
             }, 4000);
         }
 
         function createToastContainer() {
             const container = document.createElement('div');
             container.id = 'toastContainer';
-            container.style.cssText = `
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                max-width: 400px;
-            `;
             document.body.appendChild(container);
             return container;
         }
 
-        // Auto-refresh countdown
+        // ============================================
+        // AUTO-REFRESH COUNTDOWN
+        // ============================================
         function startCountdown() {
-            countdown = Math.floor(refreshInterval / 1000);
+            countdown = Math.floor(REFRESH_INTERVAL / 1000);
             const countdownEl = document.getElementById('countdown');
             const indicator = document.getElementById('refreshIndicator');
-            
+
             if (countdownInterval) clearInterval(countdownInterval);
             if (refreshTimer) clearTimeout(refreshTimer);
-            
+
             countdownInterval = setInterval(() => {
                 countdown--;
-                if (countdownEl) {
-                    countdownEl.textContent = countdown;
-                }
+                if (countdownEl) countdownEl.textContent = countdown;
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     indicator.style.opacity = '0.5';
-                    // Refresh the page
                     window.location.reload();
                 }
             }, 1000);
         }
 
-        // Function to check for balance updates without full page reload
+        // ============================================
+        // BALANCE UPDATE CHECK
+        // ============================================
         async function checkBalanceUpdate() {
             const address = '{{.Address}}';
             if (!address) return;
-            
+
             try {
                 const response = await fetch(`/api/balance?address=${address}`);
                 const data = await response.json();
@@ -266,21 +746,17 @@
                     const balanceEl = document.getElementById('balanceValue');
                     const currentBalance = parseInt(balanceEl.textContent);
                     const newBalance = data.data.balance;
-                    
+
                     if (currentBalance !== newBalance) {
-                        // Update balance with animation
                         balanceEl.textContent = newBalance + ' coins';
                         const card = document.getElementById('balanceCard');
                         card.classList.add('balance-updated');
-                        setTimeout(() => {
-                            card.classList.remove('balance-updated');
-                        }, 500);
-                        
-                        // Show notification
+                        setTimeout(() => card.classList.remove('balance-updated'), 600);
+
                         if (newBalance > currentBalance) {
-                            showToast(` Balance increased by ${newBalance - currentBalance} coins!`, 'success');
+                            showToast(`Balance increased by ${newBalance - currentBalance} coins`, 'success');
                         } else if (newBalance < currentBalance) {
-                            showToast(` Balance decreased by ${currentBalance - newBalance} coins`, 'warning');
+                            showToast(`Balance decreased by ${currentBalance - newBalance} coins`, 'warning');
                         }
                     }
                 }
@@ -289,36 +765,30 @@
             }
         }
 
-        // Start auto-refresh and balance checking
+        // ============================================
+        // INITIALIZATION
+        // ============================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Start countdown
             startCountdown();
-            
-            // Check balance every 10 seconds (in addition to full refresh)
             setInterval(checkBalanceUpdate, 10000);
-            
-            // Initial balance check
             setTimeout(checkBalanceUpdate, 2000);
-            
-            // Create toast container
             createToastContainer();
         });
 
-        // Add styles for animations
+        // ============================================
+        // ANIMATION STYLES
+        // ============================================
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideUp {
                 from {
-                    transform: translateY(20px);
+                    transform: translateY(16px);
                     opacity: 0;
                 }
                 to {
                     transform: translateY(0);
                     opacity: 1;
                 }
-            }
-            .refresh-indicator {
-                transition: opacity 0.3s ease;
             }
         `;
         document.head.appendChild(style);

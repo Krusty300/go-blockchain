@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // WebServer handles the web wallet interface
@@ -20,9 +21,79 @@ func NewWebServer(bc *Blockchain) *WebServer {
 		blockchain: bc,
 	}
 
-	// Parse templates
+	// Create a custom template with functions
+	funcMap := template.FuncMap{
+		"formatTimestamp": func(timestamp int64) string {
+			if timestamp == 0 {
+				return "Genesis Block"
+			}
+			t := time.Unix(timestamp, 0)
+			return t.Format("2006-01-02 15:04:05")
+		},
+		"formatDate": func(timestamp int64) string {
+			if timestamp == 0 {
+				return "Genesis"
+			}
+			t := time.Unix(timestamp, 0)
+			return t.Format("Jan 2, 2006")
+		},
+		"formatTime": func(timestamp int64) string {
+			if timestamp == 0 {
+				return ""
+			}
+			t := time.Unix(timestamp, 0)
+			return t.Format("15:04:05")
+		},
+		"formatBlockTime": func(timestamp int64) string {
+			if timestamp == 0 {
+				return "Genesis Block"
+			}
+			t := time.Unix(timestamp, 0)
+			now := time.Now()
+			if t.Format("2006-01-02") == now.Format("2006-01-02") {
+				return "Today at " + t.Format("15:04:05")
+			}
+			return t.Format("Jan 2, 2006 at 15:04:05")
+		},
+		"timeAgo": func(timestamp int64) string {
+			if timestamp == 0 {
+				return "Genesis"
+			}
+			t := time.Unix(timestamp, 0)
+			duration := time.Since(t)
+			if duration < time.Minute {
+				return "Just now"
+			} else if duration < time.Hour {
+				return fmt.Sprintf("%d minutes ago", int(duration.Minutes()))
+			} else if duration < 24*time.Hour {
+				return fmt.Sprintf("%d hours ago", int(duration.Hours()))
+			} else {
+				days := int(duration.Hours() / 24)
+				if days == 1 {
+					return "Yesterday"
+				}
+				return fmt.Sprintf("%d days ago", days)
+			}
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"lastBlock": func(blocks []*Block) *Block {
+			if len(blocks) == 0 {
+				return nil
+			}
+			return blocks[len(blocks)-1]
+		},
+	}
+
+	// Parse templates with functions
 	var err error
-	ws.templates, err = template.ParseGlob("webwallet/templates/*.html")
+	ws.templates, err = template.New("").
+		Funcs(funcMap).
+		ParseGlob("webwallet/templates/*.html")
 	if err != nil {
 		fmt.Printf("❌ Error loading templates: %v\n", err)
 		panic(err)
@@ -112,12 +183,13 @@ func (ws *WebServer) walletHandler(w http.ResponseWriter, r *http.Request) {
 				for _, out := range tx.Outputs {
 					if string(out.PubKeyHash) == address {
 						transactions = append(transactions, TransactionDisplay{
-							TxID:   txID,
-							To:     address,
-							Amount: out.Value,
-							Type:   "Mining Reward",
-							Block:  block.Height,
-							Time:   fmt.Sprintf("Block #%d", block.Height),
+							TxID:      txID,
+							To:        address,
+							Amount:    out.Value,
+							Type:      "Mining Reward",
+							Block:     block.Height,
+							Time:      formatTimestamp(block.Timestamp),
+							Timestamp: block.Timestamp,
 						})
 						processedTxIDs[txID] = true
 						break
@@ -129,7 +201,6 @@ func (ws *WebServer) walletHandler(w http.ResponseWriter, r *http.Request) {
 			// Check if this address is the sender (look in inputs)
 			isSender := false
 			for _, in := range tx.Inputs {
-				// The sender's address is stored in the PubKey field as bytes
 				if string(in.PubKey) == address {
 					isSender = true
 					break
@@ -159,16 +230,16 @@ func (ws *WebServer) walletHandler(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
-				// If we found a recipient, show as SENT
 				if recipient != "" && sentAmount > 0 {
 					transactions = append(transactions, TransactionDisplay{
-						TxID:   txID,
-						From:   address,
-						To:     recipient,
-						Amount: sentAmount,
-						Type:   "Sent",
-						Block:  block.Height,
-						Time:   fmt.Sprintf("Block #%d", block.Height),
+						TxID:      txID,
+						From:      address,
+						To:        recipient,
+						Amount:    sentAmount,
+						Type:      "Sent",
+						Block:     block.Height,
+						Time:      formatTimestamp(block.Timestamp),
+						Timestamp: block.Timestamp,
 					})
 					processedTxIDs[txID] = true
 				}
@@ -185,13 +256,14 @@ func (ws *WebServer) walletHandler(w http.ResponseWriter, r *http.Request) {
 
 				if receivedAmount > 0 && from != "" {
 					transactions = append(transactions, TransactionDisplay{
-						TxID:   txID,
-						From:   from,
-						To:     address,
-						Amount: receivedAmount,
-						Type:   "Received",
-						Block:  block.Height,
-						Time:   fmt.Sprintf("Block #%d", block.Height),
+						TxID:      txID,
+						From:      from,
+						To:        address,
+						Amount:    receivedAmount,
+						Type:      "Received",
+						Block:     block.Height,
+						Time:      formatTimestamp(block.Timestamp),
+						Timestamp: block.Timestamp,
 					})
 					processedTxIDs[txID] = true
 				}
@@ -538,6 +610,19 @@ func (ws *WebServer) mineAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 // ============================================
+// Helper Functions
+// ============================================
+
+// formatTimestamp formats a Unix timestamp to a readable string
+func formatTimestamp(timestamp int64) string {
+	if timestamp == 0 {
+		return "Genesis Block"
+	}
+	t := time.Unix(timestamp, 0)
+	return t.Format("2006-01-02 15:04:05")
+}
+
+// ============================================
 // Types for the web server
 // ============================================
 
@@ -550,13 +635,14 @@ type WalletPageData struct {
 
 // TransactionDisplay represents a transaction for display
 type TransactionDisplay struct {
-	TxID   string
-	From   string
-	To     string
-	Amount int
-	Type   string
-	Block  int
-	Time   string
+	TxID      string
+	From      string
+	To        string
+	Amount    int
+	Type      string
+	Block     int
+	Time      string
+	Timestamp int64
 }
 
 // SendRequest represents a send coins request

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"time" // Make sure time is imported
 )
 
 type Blockchain struct {
@@ -14,7 +15,7 @@ type Blockchain struct {
 // CreateGenesisBlock creates the first block in the blockchain
 func CreateGenesisBlock(coinbase *Transaction) *Block {
 	return &Block{
-		Timestamp:     0,
+		Timestamp:     time.Now().Unix(), // Use current time
 		Transactions:  []*Transaction{coinbase},
 		PrevBlockHash: []byte{},
 		Hash:          []byte{},
@@ -57,6 +58,7 @@ func NewBlockchain(address string) *Blockchain {
 
 		blocks = []*Block{genesis}
 		fmt.Printf("Genesis block created for wallet: %s\n", address)
+		fmt.Printf("Genesis block timestamp: %s\n", time.Unix(blocks[0].Timestamp, 0).Format("2006-01-02 15:04:05"))
 	}
 
 	return &Blockchain{
@@ -68,7 +70,7 @@ func NewBlockchain(address string) *Blockchain {
 func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := &Block{
-		Timestamp:     0,
+		Timestamp:     time.Now().Unix(),
 		Transactions:  transactions,
 		PrevBlockHash: prevBlock.Hash,
 		Hash:          []byte{},
@@ -88,7 +90,9 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	}
 
 	bc.Blocks = append(bc.Blocks, newBlock)
-	fmt.Printf("Block #%d added to chain\n", newBlock.Height)
+	fmt.Printf("Block #%d added to chain at %s\n",
+		newBlock.Height,
+		time.Unix(newBlock.Timestamp, 0).Format("2006-01-02 15:04:05"))
 }
 
 func (bc *Blockchain) VerifyChain() bool {
@@ -162,16 +166,13 @@ func (bc *Blockchain) GetBalance(address string) int {
 }
 
 // AddTransaction adds a transaction to the blockchain
-// For CLI transactions, we skip signature verification
 func (bc *Blockchain) AddTransaction(tx *Transaction) error {
 	// Add the transaction to a new block without signature verification
-	// This is used for CLI transactions where we don't have the private key
 	bc.AddBlock([]*Transaction{tx})
 	return nil
 }
 
 // AddTransactionWithVerification adds a transaction with signature verification
-// Use this for transactions from the web wallet
 func (bc *Blockchain) AddTransactionWithVerification(tx *Transaction) error {
 	// Verify the transaction signature
 	if !VerifyTransactionSignature(tx) {

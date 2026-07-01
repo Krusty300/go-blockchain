@@ -5,12 +5,219 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Coins - Blockchain Web Wallet</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           PAGE CONTAINER
+        ======================================== */
+        .send-container {
+            max-width: 560px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ========================================
+           SEND CARD
+        ======================================== */
+        .send-card {
+            background: linear-gradient(135deg, #ffffff 0%, #e9e8ff 100%);
+            padding: 2.25rem 2.5rem;
+            border-radius: 0px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .send-card h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: #2d3436;
+            letter-spacing: -0.02em;
+        }
+
+        .send-subtitle {
+            text-align: center;
+            color: #636e72;
+            font-size: 0.95rem;
+            margin-bottom: 1.75rem;
+            font-weight: 400;
+        }
+
+        /* ========================================
+           ERROR MESSAGE
+        ======================================== */
+        .error-message {
+            background: #fff5f5;
+            color: #e74c3c;
+            padding: 0.8rem 1rem;
+            border-radius: 0px;
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           FORM
+        ======================================== */
+        .send-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2d3436;
+            letter-spacing: 0.01em;
+        }
+
+        .form-group .input-field {
+            padding: 0.7rem 0.9rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: #fafafa;
+            color: #2d3436;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-group .input-field:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+            background: white;
+        }
+
+        .form-group .input-field:disabled,
+        .form-group .input-field[readonly] {
+            background: #f1f2f6;
+            color: #636e72;
+            cursor: not-allowed;
+            border-color: #e9ecef;
+        }
+
+        .form-group .input-field::placeholder {
+            color: #b2bec3;
+            font-weight: 400;
+        }
+
+        /* ========================================
+           BUTTON
+        ======================================== */
+        .btn-primary {
+            background: #6c5ce7;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            width: 100%;
+            margin-top: 0.25rem;
+        }
+
+        .btn-primary:hover {
+            background: #5a4bd1;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* ========================================
+           INFO BOX
+        ======================================== */
+        .send-info {
+            margin-top: 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #636e72;
+            line-height: 1.6;
+            border: 1px solid #f1f2f6;
+        }
+
+        .send-info p {
+            margin: 0;
+        }
+
+        .send-info p:first-child {
+            margin-bottom: 0.25rem;
+        }
+
+        .send-info strong {
+            color: #2d3436;
+            font-weight: 600;
+        }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+        @media (max-width: 640px) {
+            .send-container {
+                margin: 1.5rem auto;
+                padding: 0 1rem;
+            }
+
+            .send-card {
+                padding: 1.5rem 1.25rem;
+            }
+
+            .send-card h2 {
+                font-size: 1.25rem;
+            }
+
+            .form-group .input-field {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .btn-primary {
+                padding: 0.7rem 1.25rem;
+                font-size: 0.95rem;
+            }
+
+            .send-info {
+                padding: 0.8rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .send-card {
+                padding: 1.25rem 1rem;
+            }
+
+            .send-card h2 {
+                font-size: 1.1rem;
+            }
+
+            .send-subtitle {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
+                <span class="brand-icon">⛓️</span>
                 <span class="brand-text">Blockchain Wallet</span>
             </div>
             <div class="nav-links">
@@ -33,37 +240,28 @@
 
             <form method="POST" action="/send" class="send-form">
                 <input type="hidden" name="from" value="{{.From}}">
-                
+
                 <div class="form-group">
                     <label for="from">From Address</label>
                     <input type="text" id="from" name="from" value="{{.From}}" readonly class="input-field">
                 </div>
 
-                <br>
-                <br>
-
                 <div class="form-group">
                     <label for="to">To Address</label>
-                    <input type="text" id="to" name="to" placeholder="Enter recipient's address" class="input-field" required>
+                    <input type="text" id="to" name="to" placeholder="Enter recipient's wallet address" class="input-field" required>
                 </div>
-
-                <br>
-                <br>
 
                 <div class="form-group">
                     <label for="amount">Amount (coins)</label>
                     <input type="number" id="amount" name="amount" placeholder="Enter amount to send" class="input-field" min="1" required>
                 </div>
 
-                <br>
-                <br>
-
-                <button type="submit" class="btn btn-primary btn-block">Send Coins</button>
+                <button type="submit" class="btn-primary">Send Coins</button>
             </form>
 
             <div class="send-info">
-                <p>Transaction fees are automatically included in each block.</p>
-                <p>You'll earn 100 coins for every block you mine.</p>
+                <p><strong>Transaction fees</strong> are automatically included in each block.</p>
+                <p><strong>Mining reward</strong> — You earn 100 coins for every block you mine.</p>
             </div>
         </div>
     </div>

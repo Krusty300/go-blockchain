@@ -6,11 +6,459 @@
     <title>Block Explorer - Blockchain Web Wallet</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           PAGE CONTAINER
+        ======================================== */
+        .explorer-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* ========================================
+           HEADER SECTION
+        ======================================== */
+        .explorer-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .explorer-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2d3436;
+            letter-spacing: -0.02em;
+        }
+
+        .explorer-header p {
+            font-size: 1.05rem;
+            color: #636e72;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ========================================
+           STATS CARDS
+        ======================================== */
+        .chain-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .stat {
+            background: #f8f9fa;
+            padding: 1.25rem 2.5rem;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 140px;
+            transition: background 0.2s ease;
+        }
+
+        .stat:hover {
+            background: #f1f2f6;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #b2bec3;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        /* ========================================
+           BLOCK LIST
+        ======================================== */
+        .block-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* ========================================
+           BLOCK ITEM
+        ======================================== */
+        .block-item {
+            background: white;
+            border-radius: 16px;
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .block-item:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ========================================
+           BLOCK HEADER
+        ======================================== */
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .block-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .block-number {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2d3436;
+            letter-spacing: -0.01em;
+        }
+
+        .block-number span {
+            color: #6c5ce7;
+        }
+
+        .block-hash {
+            font-family: 'Inter', monospace;
+            font-size: 0.8rem;
+            color: #b2bec3;
+            letter-spacing: 0.02em;
+        }
+
+        /* ========================================
+           BLOCK STATS
+        ======================================== */
+        .block-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 0.5rem 1.25rem;
+            border-radius: 10px;
+        }
+
+        .block-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        .block-stat .stat-value {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .block-stat .stat-label {
+            font-size: 0.75rem;
+            color: #b2bec3;
+        }
+
+        .block-stat .time-ago {
+            font-size: 0.7rem;
+            color: #b2bec3;
+            background: #e9ecef;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .block-stat .genesis-badge {
+            font-size: 0.7rem;
+            color: #b2bec3;
+            background: #e9ecef;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .block-stat .timestamp-full {
+            font-family: 'Inter', monospace;
+            font-size: 0.8rem;
+            color: #2d3436;
+        }
+
+        /* ========================================
+           BLOCK DETAILS GRID
+        ======================================== */
+        .block-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem 1.5rem;
+            margin-bottom: 1.25rem;
+            padding: 1rem 1.25rem;
+            background: #fafafa;
+            border-radius: 10px;
+            border: 1px solid #f1f2f6;
+        }
+
+        .block-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            padding: 0.2rem 0;
+        }
+
+        .block-detail .detail-label {
+            font-size: 0.7rem;
+            color: #b2bec3;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+        }
+
+        .block-detail .detail-value {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2d3436;
+            font-family: 'Inter', monospace;
+            word-break: break-all;
+        }
+
+        /* ========================================
+           TRANSACTION LIST
+        ======================================== */
+        .transaction-list {
+            border-top: 1px solid #f1f2f6;
+            padding-top: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .tx-header {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2d3436;
+            margin-bottom: 0.75rem;
+        }
+
+        .tx-item {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #f5f6fa;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .tx-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0.3rem;
+        }
+
+        .tx-item .tx-id {
+            font-family: 'Inter', monospace;
+            color: #636e72;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .tx-item .tx-type {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .tx-item .tx-type.coinbase {
+            color: #00b894;
+            background: #e6f9f1;
+        }
+
+        .tx-item .tx-type.normal {
+            color: #6c5ce7;
+            background: #f0edff;
+        }
+
+        .tx-item .tx-outputs {
+            color: #b2bec3;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .tx-item .tx-amount-info {
+            color: #2d3436;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+        @media (max-width: 992px) {
+            .block-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .explorer-container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+
+            .explorer-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .explorer-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .chain-stats {
+                gap: 0.75rem;
+            }
+
+            .stat {
+                padding: 0.75rem 1.25rem;
+                min-width: 100px;
+                flex: 1;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .block-item {
+                padding: 1.25rem 1rem;
+            }
+
+            .block-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .block-stats {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 0.5rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+
+            .block-details {
+                grid-template-columns: 1fr 1fr;
+                padding: 0.75rem 1rem;
+                gap: 0.5rem;
+            }
+
+            .block-detail .detail-value {
+                font-size: 0.8rem;
+            }
+
+            .tx-item {
+                gap: 0.75rem;
+                padding: 0.5rem 0;
+            }
+
+            .tx-item .tx-id {
+                min-width: 80px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .block-details {
+                grid-template-columns: 1fr;
+                gap: 0.4rem;
+            }
+
+            .stat {
+                padding: 0.6rem 0.8rem;
+                min-width: 60px;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .block-number {
+                font-size: 1rem;
+            }
+
+            .block-stats {
+                gap: 0.5rem;
+                padding: 0.4rem 0.75rem;
+            }
+
+            .block-stat {
+                font-size: 0.75rem;
+            }
+
+            .tx-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+                padding: 0.6rem 0;
+            }
+
+            .tx-item .tx-id {
+                width: 100%;
+            }
+        }
+
+        /* ========================================
+           UTILITY
+        ======================================== */
+        .text-muted {
+            color: #b2bec3;
+        }
+
+        .text-ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .gap-3 { gap: 1.5rem; }
+        .gap-4 { gap: 2rem; }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 2rem; }
+
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 2rem; }
+
+        .p-1 { padding: 0.5rem; }
+        .p-2 { padding: 1rem; }
+        .p-3 { padding: 1.5rem; }
+        .p-4 { padding: 2rem; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
+                <span class="brand-icon">⛓️</span>
                 <span class="brand-text">Blockchain Wallet</span>
             </div>
             <div class="nav-links">
@@ -25,6 +473,7 @@
         <div class="explorer-header">
             <h1>Blockchain Explorer</h1>
             <p>View all blocks and transactions on the blockchain</p>
+
             <div class="chain-stats">
                 <div class="stat">
                     <span class="stat-label">Total Blocks</span>
@@ -34,6 +483,21 @@
                     <span class="stat-label">Total Supply</span>
                     <span class="stat-value">{{.TotalSupply}} coins</span>
                 </div>
+                <div class="stat">
+                    <span class="stat-label">Latest Block</span>
+                    <span class="stat-value">
+                        {{if .Blocks}}
+                            {{$lastBlock := index .Blocks (sub (len .Blocks) 1)}}
+                            {{if $lastBlock.Timestamp}}
+                                {{formatTime $lastBlock.Timestamp}}
+                            {{else}}
+                                Genesis
+                            {{end}}
+                        {{else}}
+                            —
+                        {{end}}
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -41,39 +505,91 @@
             {{range .Blocks}}
                 <div class="block-item">
                     <div class="block-header">
-                        <div class="block-number">Block #{{.Height}}</div>
-                        <div class="block-hash">Hash: {{printf "%.8x" .Hash}}...</div>
+                        <div class="block-header-left">
+                            <div class="block-number">
+                                Block <span>#{{.Height}}</span>
+                            </div>
+                            <div class="block-hash">
+                                Hash: {{printf "%.16x" .Hash}}…
+                            </div>
+                        </div>
+
+                        <div class="block-stats">
+                            <div class="block-stat">
+                                <span class="stat-value timestamp-full">
+                                    {{if .Timestamp}}
+                                        {{formatTimestamp .Timestamp}}
+                                    {{else}}
+                                        Genesis
+                                    {{end}}
+                                </span>
+                                {{if .Timestamp}}
+                                    <span class="time-ago">{{timeAgo .Timestamp}}</span>
+                                {{else}}
+                                    <span class="genesis-badge">Genesis</span>
+                                {{end}}
+                            </div>
+                            <div class="block-stat">
+                                <span class="stat-value">{{len .Transactions}}</span>
+                                <span class="stat-label">txns</span>
+                            </div>
+                            <div class="block-stat">
+                                <span class="stat-value">{{.Nonce}}</span>
+                                <span class="stat-label">nonce</span>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="block-details">
                         <div class="block-detail">
-                            <span class="detail-label">Prev Hash:</span>
-                            <span class="detail-value">{{printf "%.8x" .PrevBlockHash}}...</span>
+                            <span class="detail-label">Previous Hash</span>
+                            <span class="detail-value">
+                                {{if .PrevBlockHash}}
+                                    {{printf "%.16x" .PrevBlockHash}}…
+                                {{else}}
+                                    <span class="text-muted">Genesis Block</span>
+                                {{end}}
+                            </span>
                         </div>
                         <div class="block-detail">
-                            <span class="detail-label">Nonce:</span>
-                            <span class="detail-value">{{.Nonce}}</span>
+                            <span class="detail-label">Merkle Root</span>
+                            <span class="detail-value">
+                                {{if .HashTransactions}}
+                                    {{printf "%.16x" .HashTransactions}}…
+                                {{else}}
+                                    <span class="text-muted">—</span>
+                                {{end}}
+                            </span>
                         </div>
                         <div class="block-detail">
-                            <span class="detail-label">Transactions:</span>
-                            <span class="detail-value">{{len .Transactions}}</span>
-                        </div>
-                        <div class="block-detail">
-                            <span class="detail-label">Merkle Root:</span>
-                            <span class="detail-value">{{printf "%.8x" .HashTransactions}}...</span>
+                            <span class="detail-label">Block Time</span>
+                            <span class="detail-value">
+                                {{if .Timestamp}}
+                                    {{formatTimestamp .Timestamp}}
+                                {{else}}
+                                    <span class="text-muted">Genesis</span>
+                                {{end}}
+                            </span>
                         </div>
                     </div>
+
                     {{if .Transactions}}
                         <div class="transaction-list">
-                            <div class="tx-header">Transactions in this block:</div>
+                            <div class="tx-header">Transactions</div>
                             {{range .Transactions}}
                                 <div class="tx-item">
-                                    <span class="tx-id">{{printf "%.16x" .ID}}...</span>
+                                    <span class="tx-id">{{printf "%.16x" .ID}}…</span>
                                     {{if .IsCoinbase}}
                                         <span class="tx-type coinbase">Coinbase</span>
                                     {{else}}
                                         <span class="tx-type normal">Transfer</span>
                                     {{end}}
                                     <span class="tx-outputs">{{len .Outputs}} outputs</span>
+                                    <span class="tx-amount-info">
+                                        {{$total := 0}}
+                                        {{range .Outputs}}{{ $total = add $total .Value }}{{end}}
+                                        {{$total}} coins
+                                    </span>
                                 </div>
                             {{end}}
                         </div>
@@ -90,12 +606,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(`Wallet created!\nAddress: ${data.data.address}`);
+                        alert(' Wallet created!\nAddress: ' + data.data.address);
                         window.location.href = `/wallet?address=${data.data.address}`;
                     }
                 })
-                .catch(error => alert('Error creating wallet: ' + error.message));
+                .catch(error => alert(' Error creating wallet: ' + error.message));
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Optional: Auto-refresh every 60 seconds
+            // setInterval(() => { window.location.reload(); }, 60000);
+        });
     </script>
 </body>
 </html>

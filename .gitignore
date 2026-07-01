@@ -1,0 +1,73 @@
+# Create .gitignore
+@'
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+blockchain.exe
+bc.exe
+blockchain_app.exe
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+blockchain.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Logs
+*.log
+
+# Backup files
+*.backup
+*.bak
+
+# Environment files
+.env
+.env.local
+
+# Coverage reports
+coverage.html
+coverage.out
+
+# Test scripts (optional, but we'll keep them)
+# test.ps1
+# test_transactions.ps1
+# check_all_balances.ps1
+# validate_history.ps1
+# test_web_history.ps1
+
+# Node modules (if any)
+node_modules/
+
+# Compiled files
+*.woff2
+'@ | Out-File -FilePath .gitignore -Encoding utf8

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Explorer - Blockchain Web Wallet</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-text">Blockchain Wallet</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/" onclick="createWallet(event)">Create Wallet</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="explorer-container">
+        <div class="explorer-header">
+            <h1>Blockchain Explorer</h1>
+            <p>View all blocks and transactions on the blockchain</p>
+            <div class="chain-stats">
+                <div class="stat">
+                    <span class="stat-label">Total Blocks</span>
+                    <span class="stat-value">{{len .Blocks}}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Supply</span>
+                    <span class="stat-value">{{.TotalSupply}} coins</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="block-list">
+            {{range .Blocks}}
+                <div class="block-item">
+                    <div class="block-header">
+                        <div class="block-number">Block #{{.Height}}</div>
+                        <div class="block-hash">Hash: {{printf "%.8x" .Hash}}...</div>
+                    </div>
+                    <div class="block-details">
+                        <div class="block-detail">
+                            <span class="detail-label">Prev Hash:</span>
+                            <span class="detail-value">{{printf "%.8x" .PrevBlockHash}}...</span>
+                        </div>
+                        <div class="block-detail">
+                            <span class="detail-label">Nonce:</span>
+                            <span class="detail-value">{{.Nonce}}</span>
+                        </div>
+                        <div class="block-detail">
+                            <span class="detail-label">Transactions:</span>
+                            <span class="detail-value">{{len .Transactions}}</span>
+                        </div>
+                        <div class="block-detail">
+                            <span class="detail-label">Merkle Root:</span>
+                            <span class="detail-value">{{printf "%.8x" .HashTransactions}}...</span>
+                        </div>
+                    </div>
+                    {{if .Transactions}}
+                        <div class="transaction-list">
+                            <div class="tx-header">Transactions in this block:</div>
+                            {{range .Transactions}}
+                                <div class="tx-item">
+                                    <span class="tx-id">{{printf "%.16x" .ID}}...</span>
+                                    {{if .IsCoinbase}}
+                                        <span class="tx-type coinbase">Coinbase</span>
+                                    {{else}}
+                                        <span class="tx-type normal">Transfer</span>
+                                    {{end}}
+                                    <span class="tx-outputs">{{len .Outputs}} outputs</span>
+                                </div>
+                            {{end}}
+                        </div>
+                    {{end}}
+                </div>
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+        function createWallet(event) {
+            if (event) event.preventDefault();
+            fetch('/api/createwallet')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Wallet created!\nAddress: ${data.data.address}`);
+                        window.location.href = `/wallet?address=${data.data.address}`;
+                    }
+                })
+                .catch(error => alert('Error creating wallet: ' + error.message));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Web Wallet</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-text">Blockchain Wallet</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/" onclick="createWallet(event)">Create Wallet</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <h1> Welcome to Your Blockchain Wallet</h1>
+            <p class="subtitle">Secure, decentralized, and built on Go</p>
+            <div class="hero-actions">
+                <button onclick="createWallet(event)" class="btn btn-primary">Create New Wallet</button>
+                <button onclick="viewWallet()" class="btn btn-secondary">View Wallet</button>
+            </div>
+        </div>
+    </div>
+    <div class="wallet-section">
+        <div class="container">
+            <h2>Access Your Wallet</h2>
+            <div class="wallet-input-group">
+                <input type="text" id="walletAddress" placeholder="Enter your wallet address" class="input-field">
+                <button onclick="viewWallet()" class="btn btn-primary">View Wallet</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="walletInfo" style="display: none;">
+        <!-- Wallet info will be displayed here -->
+    </div>
+
+    <script>
+        async function createWallet(event) {
+            if (event) event.preventDefault();
+            try {
+                const response = await fetch('/api/createwallet');
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Wallet created successfully!\nAddress: ${data.data.address}`);
+                    // Redirect to wallet page
+                    window.location.href = `/wallet?address=${data.data.address}`;
+                }
+            } catch (error) {
+                alert('Error creating wallet: ' + error.message);
+            }
+        }
+
+        function viewWallet() {
+            const address = document.getElementById('walletAddress').value.trim();
+            if (!address) {
+                alert('Please enter a wallet address');
+                return;
+            }
+            window.location.href = `/wallet?address=${address}`;
+        }
+
+        // Allow Enter key to trigger view wallet
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('walletAddress');
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        viewWallet();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

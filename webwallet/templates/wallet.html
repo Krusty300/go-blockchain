@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - Blockchain Web Wallet</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Auto-refresh indicator */
+        .refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(108, 92, 231, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refresh-indicator .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .refresh-indicator .countdown {
+            font-weight: 600;
+        }
+        .balance-updated {
+            animation: flashGreen 0.5s ease;
+        }
+        @keyframes flashGreen {
+            0% { background: rgba(0, 184, 148, 0.3); }
+            100% { background: transparent; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-text">Blockchain Wallet</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/wallet?address={{.Address}}">Wallet</a>
+                <a href="/send?from={{.Address}}">Send</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="wallet-container">
+        <div class="wallet-header">
+            <div class="wallet-address">
+                <h2>Wallet Overview</h2>
+                <div class="address-box">
+                    <span class="address-label">Address:</span>
+                    <span class="address-value" id="walletAddress">{{.Address}}</span>
+                    <button onclick="copyAddress()" class="btn-copy">📋</button>
+                </div>
+            </div>
+            <div class="wallet-balance">
+                <div class="balance-card" id="balanceCard">
+                    <div class="balance-label">Total Balance</div>
+                    <div class="balance-value" id="balanceValue">{{.Balance}} coins</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wallet-actions">
+            <a href="/send?from={{.Address}}" class="btn btn-primary">Send Coins</a>
+            <a href="#" onclick="mineCoins(event)" class="btn btn-secondary">Mine Block</a>
+            <a href="/explorer" class="btn btn-secondary">View Blockchain</a>
+        </div>
+
+        <div class="transaction-section">
+            <h3>📜 Transaction History</h3>
+            {{if .Transactions}}
+                <div class="transaction-list">
+                    {{range .Transactions}}
+                        <div class="transaction-item">
+                            <div class="tx-type {{.Type}}">
+                                {{.Type}}
+                            </div>
+                            <div class="tx-details">
+                                <div class="tx-amount">{{.Amount}} coins</div>
+                                {{if .From}}
+                                    <div class="tx-from">From: {{.From}}</div>
+                                {{end}}
+                                {{if .To}}
+                                    <div class="tx-to">To: {{.To}}</div>
+                                {{end}}
+                                <div class="tx-time">{{.Time}}</div>
+                            </div>
+                            <div class="tx-id">
+                                <span class="tx-id-label">TxID:</span>
+                                <span class="tx-id-value">{{.TxID}}</span>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <div class="no-transactions">
+                    <p>No transactions found for this address.</p>
+                    <p class="hint">Start by mining or receiving coins!</p>
+                </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Refresh Indicator -->
+    <div class="refresh-indicator" id="refreshIndicator">
+        <div class="spinner"></div>
+        <span>Auto-refresh in <span class="countdown" id="countdown">30</span>s</span>
+    </div>
+
+    <script>
+        // Auto-refresh settings
+        let refreshInterval = 30000; // 30 seconds
+        let countdown = 30;
+        let countdownInterval;
+        let refreshTimer;
+
+        function copyAddress() {
+            const address = '{{.Address}}';
+            navigator.clipboard.writeText(address).then(() => {
+                showToast(' Address copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback
+                const input = document.createElement('input');
+                input.value = address;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast(' Address copied to clipboard!', 'success');
+            });
+        }
+
+        async function mineCoins(event) {
+            if (event) event.preventDefault();
+            const address = '{{.Address}}';
+            if (!address) {
+                showToast(' No wallet address found', 'error');
+                return;
+            }
+            
+            try {
+                showToast('⛏️ Mining started... This may take a few seconds', 'info');
+                const response = await fetch(`/api/mine?address=${address}`);
+                const data = await response.json();
+                if (data.success) {
+                    showToast(` Block mined! Received ${data.data.reward} coins!`, 'success');
+                    // Refresh after a delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(' Mining failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast(' Error mining: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshWallet(event) {
+            if (event) event.preventDefault();
+            showToast(' Refreshing wallet...', 'info');
+            window.location.reload();
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer') || createToastContainer();
+            const toast = document.createElement('div');
+            const colors = {
+                success: '#00b894',
+                error: '#e74c3c',
+                info: '#6c5ce7',
+                warning: '#fdcb6e'
+            };
+            toast.style.cssText = `
+                background: ${colors[type] || colors.info};
+                color: white;
+                padding: 12px 20px;
+                margin-bottom: 10px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideUp 0.3s ease;
+                font-family: 'Mona Sans', sans-serif;
+                font-size: 14px;
+                max-width: 400px;
+            `;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 400px;
+            `;
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Auto-refresh countdown
+        function startCountdown() {
+            countdown = Math.floor(refreshInterval / 1000);
+            const countdownEl = document.getElementById('countdown');
+            const indicator = document.getElementById('refreshIndicator');
+            
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (refreshTimer) clearTimeout(refreshTimer);
+            
+            countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdownEl) {
+                    countdownEl.textContent = countdown;
+                }
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    indicator.style.opacity = '0.5';
+                    // Refresh the page
+                    window.location.reload();
+                }
+            }, 1000);
+        }
+
+        // Function to check for balance updates without full page reload
+        async function checkBalanceUpdate() {
+            const address = '{{.Address}}';
+            if (!address) return;
+            
+            try {
+                const response = await fetch(`/api/balance?address=${address}`);
+                const data = await response.json();
+                if (data.success) {
+                    const balanceEl = document.getElementById('balanceValue');
+                    const currentBalance = parseInt(balanceEl.textContent);
+                    const newBalance = data.data.balance;
+                    
+                    if (currentBalance !== newBalance) {
+                        // Update balance with animation
+                        balanceEl.textContent = newBalance + ' coins';
+                        const card = document.getElementById('balanceCard');
+                        card.classList.add('balance-updated');
+                        setTimeout(() => {
+                            card.classList.remove('balance-updated');
+                        }, 500);
+                        
+                        // Show notification
+                        if (newBalance > currentBalance) {
+                            showToast(` Balance increased by ${newBalance - currentBalance} coins!`, 'success');
+                        } else if (newBalance < currentBalance) {
+                            showToast(` Balance decreased by ${currentBalance - newBalance} coins`, 'warning');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking balance:', error);
+            }
+        }
+
+        // Start auto-refresh and balance checking
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start countdown
+            startCountdown();
+            
+            // Check balance every 10 seconds (in addition to full refresh)
+            setInterval(checkBalanceUpdate, 10000);
+            
+            // Initial balance check
+            setTimeout(checkBalanceUpdate, 2000);
+            
+            // Create toast container
+            createToastContainer();
+        });
+
+        // Add styles for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+            .refresh-indicator {
+                transition: opacity 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/skip2/go-qrcode"
 )
 
 // WebServer handles the web wallet interface
@@ -118,6 +120,7 @@ func (ws *WebServer) Start(port string) {
 	http.HandleFunc("/wallet", ws.walletHandler)
 	http.HandleFunc("/send", ws.sendHandler)
 	http.HandleFunc("/explorer", ws.explorerHandler)
+	http.HandleFunc("/qr", ws.qrCodeHandler) // QR Code handler
 	http.HandleFunc("/api/createwallet", ws.createWalletAPI)
 	http.HandleFunc("/api/balance", ws.getBalanceAPI)
 	http.HandleFunc("/api/send", ws.sendCoinsAPI)
@@ -133,6 +136,7 @@ func (ws *WebServer) Start(port string) {
 	fmt.Printf("   - Wallet:      http://localhost:%s/wallet?address=<ADDRESS>\n", port)
 	fmt.Printf("   - Send Coins:  http://localhost:%s/send?from=<ADDRESS>\n", port)
 	fmt.Printf("   - Explorer:    http://localhost:%s/explorer\n", port)
+	fmt.Printf("   - QR Code:     http://localhost:%s/qr?address=<ADDRESS>\n", port)
 	fmt.Println()
 	fmt.Println("⚠️  Press Ctrl+C to stop the server")
 
@@ -434,6 +438,39 @@ func (ws *WebServer) explorerHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("❌ Error executing explorer.html: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// ============================================
+// QR Code Handler
+// ============================================
+
+// qrCodeHandler generates a QR code for a wallet address
+func (ws *WebServer) qrCodeHandler(w http.ResponseWriter, r *http.Request) {
+	address := r.URL.Query().Get("address")
+	if address == "" {
+		http.Error(w, "Address is required", http.StatusBadRequest)
+		return
+	}
+
+	// Default size
+	size := 256
+	if sizeParam := r.URL.Query().Get("size"); sizeParam != "" {
+		if s, err := strconv.Atoi(sizeParam); err == nil && s > 0 && s <= 1024 {
+			size = s
+		}
+	}
+
+	// Generate QR code with medium error correction
+	png, err := qrcode.Encode(address, qrcode.Medium, size)
+	if err != nil {
+		http.Error(w, "Failed to generate QR code", http.StatusInternalServerError)
+		return
+	}
+
+	// Set proper content type
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
+	w.Write(png)
 }
 
 // ============================================
